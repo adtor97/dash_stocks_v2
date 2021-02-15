@@ -1,2 +1,2 @@
 # dash_stocks
-Dash for stock values
+Dash base dashboard for analyzing stocks
