@@ -34,9 +34,9 @@ def graph_Bollinger(df):
     fig = go.Figure()
     fig.update_layout(title="Bandas de Bollinger", width=600)
 
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_rolling"], mode='lines', name="mean_rolling"))
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_std_rolling_plus"], mode='lines', name="mean_std_rolling_plus"))
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_std_rolling_less"], mode='lines', name="mean_std_rolling_less"))
+    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_rolling"], mode='lines', name="15d rolling avg"))
+    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_std_rolling_plus"], mode='lines', name="15d upper band"))
+    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_std_rolling_less"], mode='lines', name="15d lower band"))
     fig.add_trace(go.Scatter(x=df[date_column], y=df["mean"], mode='lines', name="Typical Price"))
 
     return fig
@@ -140,8 +140,8 @@ def graph_ADX(df):
     fig = go.Figure()
     fig.update_layout(title="ADX", width=600)
 
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["pos_DI"], mode='lines', name="pos_DI"))
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["neg_DI"], mode='lines', name="neg_DI"))
+    fig.add_trace(go.Scatter(x=df[date_column], y=df["pos_DI"], mode='lines', name="+ DI"))
+    fig.add_trace(go.Scatter(x=df[date_column], y=df["neg_DI"], mode='lines', name="- DI"))
     fig.add_trace(go.Scatter(x=df[date_column], y=df["ADX"], mode='lines', name="ADX"))
 
     return fig
