@@ -15,35 +15,28 @@ import datetime
 import yfinance as yf
 import numpy as np
 import praw
-import sqlite3
 
 import plotly
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from dash_utils import make_table, make_card, ticker_inputs, make_item
-from reddit_data import get_reddit
-from tweet_data import get_options_flow
-from fin_report_data import get_financial_report #, get_financial_reportformatted
+#from reddit_data import get_reddit
+#from tweet_data import get_options_flow
+#from fin_report_data import get_financial_report #, get_financial_reportformatted
 
 from google_extractor import *
 from technical_indicators_utils import *
-
-conn = sqlite3.connect('stocks.sqlite')
 
 server = Flask(__name__)
 app = dash.Dash(__name__,server = server ,meta_tags=[{ "content": "width=device-width"}], external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 app.config.suppress_callback_exceptions = True
 
-#get_options_flow()
-#flow = pd.read_sql("select datetime, text from tweets order by datetime desc", conn)
 df_google = pd.DataFrame(data = [], columns = ["google_title", "link"])
 global n_clicks_google
 n_clicks_google = 0
 
-global dfr
-dfr = get_reddit()
 
 layout1 = html.Div([
         # html.Div(id = 'cards')
