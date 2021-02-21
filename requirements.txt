@@ -31,7 +31,7 @@ matplotlib==3.3.4
 multitasking==0.0.9
 murmurhash==1.0.5
 nltk==3.5
-numpy==1.20.1
+numpy==1.19.3
 oauthlib==3.1.0
 packaging==20.9
 pandas==1.2.2
