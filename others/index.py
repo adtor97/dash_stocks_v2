@@ -27,6 +27,7 @@ from tweet_data import get_options_flow
 from fin_report_data import get_financial_report #, get_financial_reportformatted
 
 from google_extractor import *
+from technical_indicators_utils import *
 
 conn = sqlite3.connect('stocks.sqlite')
 
@@ -48,10 +49,14 @@ layout1 = html.Div([
 
                 dbc.Row([dbc.Col(make_card("Enter Ticker", "success", ticker_inputs('ticker-input', 'date-picker', 36)))]) #row 1
                 , dbc.Row([make_card("select ticker", "warning", "select ticker")],id = 'cards') #row 2
-                , dbc.Row([dbc.Col([make_card("Google Order Flow", 'primary', make_table('table-sorting-filtering2', df_google, '17px', 10))])
-                        ,dbc.Col([make_card("Fin table ", "secondary", html.Div(id="fin-table"))])
-                        ]) #row 3
 
+                , dbc.Row([dbc.Alert("________________________Technical indicators________________________", color="primary")], justify = 'center')
+                , dbc.Row([make_card("select ticker", "warning", "select ticker for technical graphs")], id='technical_graphs')
+
+                , dbc.Row([dbc.Col([make_card("Google Order Flow", 'primary', [html.P(html.Button('Refresh', id='refresh_google')), make_table('table-sorting-filtering2', df_google, '17px', 10)])])
+                        #,dbc.Col([make_card("Fin table ", "secondary", html.Div(id="fin-table"))])
+                        ]) #row 3
+'''
                 , dbc.Row([
                         dbc.Col([
                           dbc.Row([make_card("Wallstreet Bets New Posts", 'primary'
@@ -61,7 +66,7 @@ layout1 = html.Div([
                                 ])
 
                         ,dbc.Col([dbc.Row([dbc.Alert("________________________Charts________________________", color="primary")], justify = 'center')
-                                ,dbc.Row(html.Div(id='x-vol-1'), justify = 'center')
+                                , dbc.Row(html.Div(id='x-vol-1'), justify = 'center')
                                 #dcc.Graph(id = 'x-vol-1')
                                 #,dbc.Row([dbc.Alert("place holder 5", color="primary")])
                                 , dcc.Interval(
@@ -76,7 +81,7 @@ layout1 = html.Div([
                                 ])#end col
 
                 ]) #row 4
-
+'''
                     ]) #end div
 
 app.layout= layout1
@@ -91,7 +96,7 @@ operators = [['ge ', '>='],
              ['contains '],
              ['datestartswith ']]
 
-
+'''
 def split_filter_part(filter_part):
     for operator_type in operators:
         for operator in operator_type:
@@ -114,7 +119,7 @@ def split_filter_part(filter_part):
                 return name, operator_type[0].strip(), value
 
     return [None] * 3
-
+'''
 
 @app.callback(Output('cards', 'children'),
 [Input('ticker-input', 'value')])
@@ -134,7 +139,7 @@ def refresh_cards(ticker):
                         , dbc.Col(make_card("Avg 10d Vol", 'secondary', TICKER.info['averageVolume10days']))
                         ] #end cards list
         return cards
-
+'''
 @app.callback(
     [Output(f"collapse-{i}", "is_open") for i in range(1, 4)],
     [Input(f"group-{i}-toggle", "n_clicks") for i in range(1, 4)],
@@ -146,6 +151,7 @@ def toggle_accordion(n1, n2, n3, is_open1, is_open2, is_open3):
         return ""
     else:
         button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+        print (button_id)
     if button_id == "group-1-toggle" and n1:
         return not is_open1, False, False
     elif button_id == "group-2-toggle" and n2:
@@ -175,7 +181,7 @@ def create_graph(ticker,startdate, enddate, n):
                       ])
 
 
-        df2 = yf.download(ticker,  period = "5d", interval = "1m")
+        df2 = yf.download(ticker,  period = "5d", interval = "5m")
         df2.reset_index(inplace=True)
 
         fig2 = go.Figure(data=[go.Candlestick(x=df2['Datetime'],
@@ -183,7 +189,7 @@ def create_graph(ticker,startdate, enddate, n):
                 low=df2['Low'], close=df2['Close'])
                       ])
 
-        df3 = yf.download(ticker,  period = "1d", interval = "1m")
+        df3 = yf.download(ticker,  period = "1d", interval = "5m")
         df3.reset_index(inplace=True)
 
         fig3 = go.Figure(data=[go.Candlestick(x=df3['Datetime'],
@@ -196,7 +202,36 @@ def create_graph(ticker,startdate, enddate, n):
                         , make_item("1d 1m Chart", dcc.Graph(figure = fig3), 3)
                         ], className="accordion")
         return accordion
+'''
 
+@app.callback(Output('technical_graphs', 'children'),
+[Input('ticker-input', 'value')
+, Input('date-picker', 'start_date')
+, Input('date-picker', 'end_date')
+])
+def create_technical_graphs(ticker,startdate, enddate):
+        print("create_technical_graphs")
+        ticker = ticker.upper()
+        df_tech = yf.download(ticker,startdate, enddate)
+        print(len(df_tech))
+        df_tech.reset_index(inplace=True)
+        print(df_tech)
+        df_tech = df_indicators_columns(df_tech)
+        print(df_tech)
+        fig1 = graph_Bollinger(df_tech)
+        fig2 = graph_CCI(df_tech)
+        fig3 = graph_ADX(df_tech)
+
+        graphs = dbc.Row([
+                            dcc.Graph(figure = fig1)
+                            , dcc.Graph(figure = fig2)
+                            , dcc.Graph(figure = fig3)
+                            ], className="graphs")
+
+        #plotly.offline.plot(fig1, filename='C:/Users/Usuario/Documents/Locus/Finances/dash_stocks/fig1.html')
+        #plotly.offline.plot(fig2, filename='C:/Users/Usuario/Documents/Locus/Finances/dash_stocks/fig2.html')
+        #plotly.offline.plot(fig3, filename='C:/Users/Usuario/Documents/Locus/Finances/dash_stocks/fig3.html')
+        return graphs
 
 #@app.callback(
 #    Output('tweets', 'children'),
@@ -206,7 +241,7 @@ def create_graph(ticker,startdate, enddate, n):
 #        get_options_flow()
 #        return html.P(f"Reloaded Tweets {n}")
 
-
+'''
 @app.callback(
     Output('table-sorting-filtering', 'data'),
     [Input('table-sorting-filtering', "page_current"),
@@ -246,18 +281,25 @@ def update_table(page_current, page_size, sort_by, filter, n_clicks):
                 page = page_current
                 size = page_size
                 return dff.iloc[page * size: (page + 1) * size].to_dict('records')
-
+'''
 @app.callback(
     Output('table-sorting-filtering2', 'data'),
-    [Input('ticker-input', 'value')]
+    [Input('ticker-input', 'value')
+    , Input('refresh_google', 'n_clicks')]
     )
-def update_table2(ticker):
-    print("update_table2")
-    df_google = news_dataframe(ticker)
-    df_google = df_google.to_dict('records')
-    return df_google
+def update_table2(ticker, n_clicks):
+    if n_clicks is None:
+            raise PreventUpdate
+    else:
+        name = yf.Ticker(ticker)
 
+        name = name.info['longName']
+        print("update_table2")
+        df_google = news_dataframe(name)
+        df_google = df_google.to_dict('records')
+        return df_google
 
+'''
 @app.callback(Output('fin-table', 'children'),
 [Input('ticker-input', 'value')])
 def fin_report(sym):
@@ -268,7 +310,7 @@ def fin_report(sym):
         table = dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
 
         return table
-
+'''
 
 
 if __name__ == '__main__':

@@ -10,6 +10,7 @@ from flask import Flask
 import pandas as pd
 import dateutil.relativedelta
 from datetime import date
+from datetime import datetime as dt
 import datetime
 import yfinance as yf
 import numpy as np
@@ -77,18 +78,18 @@ def make_card(alert_message, color, cardbody, style_dict = None):
 def ticker_inputs(inputID, pickerID, MONTH_CUTTOFF):
 
         currentDate = date.today()
-        pastDate = currentDate - dateutil.relativedelta.relativedelta(months=MONTH_CUTTOFF)
+        pastDate = currentDate - dateutil.relativedelta.relativedelta(months=3)
 
         return html.Div([
                 dcc.Input(id = inputID, type="text", placeholder="MSFT")
              , html.P(" ")
              , dcc.DatePickerRange(
                 id = pickerID,
-                min_date_allowed=pastDate,
-                #max_date_allowed=currentDate,
-                #initial_visible_month=dt(2017, 8, 5),
+                #min_date_allowed=pastDate,
+                max_date_allowed=currentDate,
+                initial_visible_month=pastDate,
                 start_date = pastDate,
-                #end_date = currentDate
+                end_date = currentDate
                 )])
 
 def make_item(button, cardbody, i):

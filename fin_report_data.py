@@ -12,14 +12,15 @@ def get_financial_report(ticker):
     urlbalancesheet = 'https://www.marketwatch.com/investing/stock/'+ticker+'/financials/balance-sheet'
 
     text_soup_financials = BeautifulSoup(requests.get(urlfinancials).text,"html") #read in
+    print(text_soup_financials)
     text_soup_balancesheet = BeautifulSoup(requests.get(urlbalancesheet).text,"html") #read in
-
+    print(text_soup_balancesheet)
 
     # build lists for Income statement
     titlesfinancials = text_soup_financials.findAll('td', {'class': 'rowTitle'})
     epslist=[]
     netincomelist = []
-    longtermdebtlist = [] 
+    longtermdebtlist = []
     interestexpenselist = []
     ebitdalist= []
 
@@ -43,7 +44,7 @@ def get_financial_report(ticker):
         if 'Long-Term Debt' in title.text:
             longtermdebtlist.append( [td.text for td in title.findNextSiblings(attrs={'class': 'valueCell'}) if td.text])
 
-    #get the data from the income statement lists 
+    #get the data from the income statement lists
     #use helper function get_element
     eps = get_element(epslist,0)
     epsGrowth = get_element(epslist,1)
@@ -55,12 +56,12 @@ def get_financial_report(ticker):
     interestExpense =  get_element(interestexpenselist,0)
     ebitda = get_element(ebitdalist,0)
 
-    # load all the data into dataframe 
-    fin_df= pd.DataFrame({'eps': eps,'eps Growth': epsGrowth,'net Income': netIncome,'shareholder Equity': shareholderEquity,'roa': 
+    # load all the data into dataframe
+    fin_df= pd.DataFrame({'eps': eps,'eps Growth': epsGrowth,'net Income': netIncome,'shareholder Equity': shareholderEquity,'roa':
                   roa,'longterm Debt': longtermDebt,'interest Expense': interestExpense,'ebitda': ebitda},index=range(date.today().year-5,date.today().year))
-    
+
     fin_df.reset_index(inplace=True)
-    
+
     return fin_df
 
 
@@ -70,7 +71,3 @@ def get_element(list,element):
         return list[element]
     except:
         return '-'
-
-
-
-
