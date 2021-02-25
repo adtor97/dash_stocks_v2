@@ -77,7 +77,7 @@ def make_card(alert_message, color, cardbody, style_dict = None):
 
 def ticker_inputs(inputID, pickerID, MONTH_CUTTOFF):
 
-        currentDate = date.today()
+        currentDate = date.today() + dateutil.relativedelta.relativedelta(days=1)
         pastDate = currentDate - dateutil.relativedelta.relativedelta(months=3)
 
         return html.Div([

@@ -84,7 +84,7 @@ def refresh_cards(ticker):
 def create_technical_graphs(ticker,startdate, enddate):
         print("create_technical_graphs")
         ticker = ticker.upper()
-        df_tech = yf.download(ticker,startdate, enddate)
+        df_tech = yf.download(ticker,startdate, enddate+dateutil.relativedelta.relativedelta(days=1))
         print(len(df_tech))
         df_tech.reset_index(inplace=True)
         print(df_tech)
