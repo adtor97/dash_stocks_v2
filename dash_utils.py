@@ -77,7 +77,7 @@ def make_card(alert_message, color, cardbody, style_dict = None):
 
 def ticker_inputs(inputID, pickerID, MONTH_CUTTOFF):
 
-        currentDate = date.today() + dateutil.relativedelta.relativedelta(days=1)
+        currentDate = date.today()
         pastDate = currentDate - dateutil.relativedelta.relativedelta(months=3)
 
         return html.Div([
@@ -86,7 +86,7 @@ def ticker_inputs(inputID, pickerID, MONTH_CUTTOFF):
              , dcc.DatePickerRange(
                 id = pickerID,
                 #min_date_allowed=pastDate,
-                max_date_allowed=currentDate,
+                max_date_allowed=currentDate + dateutil.relativedelta.relativedelta(days=1),
                 initial_visible_month=pastDate,
                 start_date = pastDate,
                 end_date = currentDate
