@@ -15,12 +15,13 @@ import datetime
 import yfinance as yf
 import numpy as np
 import praw
+from time import sleep
 
 import plotly
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from dash_utils import make_table, make_card, ticker_inputs, make_item
+from dash_utils import *
 #from reddit_data import get_reddit
 #from tweet_data import get_options_flow
 #from fin_report_data import get_financial_report #, get_financial_reportformatted
@@ -36,19 +37,37 @@ app.config.suppress_callback_exceptions = True
 df_google = pd.DataFrame(data = [], columns = ["google_title", "link"])
 global n_clicks_google
 n_clicks_google = 0
-
+boxes_dropdown_options = [{"label":"daily", "value":"1d"},
+                        {"label":"weekly", "value":"1wk"},
+                        {"label":"monthly", "value":"1mo"}
+                        ]
+df_boxes = pd.DataFrame(columns = ["Open", "High", "Low", "Close"])
+#df_boxes = yf.download("ADMP", "2020-01-27", "2021-02-27", interval = "1wk")
 
 layout1 = html.Div([
         # html.Div(id = 'cards')
 
 
                 dbc.Row([dbc.Col(make_card("Enter Ticker", "success", ticker_inputs('ticker-input', 'date-picker', 36)))]) #row 1
-                , dbc.Row([make_card("select ticker", "warning", "select ticker")],id = 'cards') #row 2
+                , dbc.Row([make_card("select ticker", "warning", "select ticker")],id = 'cards', style={"margin-top":"2%"}) #row 2
 
-                , dbc.Row([dbc.Alert("________________________Technical indicators________________________", color="primary")], justify = 'center')
+                , dbc.Row([dbc.Alert("________________________Technical indicators________________________", color="primary")], justify = 'center', style={"margin-top":"2%"})
                 , dbc.Row([make_card("select ticker", "warning", "select ticker for technical graphs")], id='technical_graphs')
 
-                , dbc.Row([dbc.Col([make_card("Google Order Flow", 'primary', [html.P(html.Button('Refresh', id='refresh_google')), make_table('table-sorting-filtering2', df_google, '17px', 10)])])
+                , dbc.Row([
+                            dbc.Col([boxes_dropdown(id="boxes-dropdown", options=boxes_dropdown_options, value="1wk")
+                                    , dbc.Label("Periods rolling avg", style={"margin-top":"5%"})
+                                    , dcc.Input(id = "boxes-period", type="number", value=10, placeholder="Select # periods", style={"margin-top":"1%"})
+                                    , dbc.Label("Periods comparison rolling avg", style={"margin-top":"2%"})
+                                    , dcc.Input(id = "boxes-comparison", type="number", value=5, placeholder="Select # comparison periods", style={"margin-top":"1%"})
+                                    , dbc.Label("Periods variation open vs close (var)", style={"margin-top":"2%"})
+                                    , dcc.Input(id = "boxes-variation", type="number", value=10, placeholder="Select # variation periods", style={"margin-top":"1%"})
+                                    ], width=2, align = 'center'
+                                )
+                            , dbc.Col(dcc.Graph(id="boxes-graph"), width=10)
+                            ], justify = 'center')
+
+                , dbc.Row([dbc.Col([make_card("Google News, Forecasts, Analysis", 'primary', [html.P(html.Button('Refresh', id='refresh_google')), make_table('table-sorting-filtering2', df_google, '17px', 10)])])
                         #,dbc.Col([make_card("Fin table ", "secondary", html.Div(id="fin-table"))])
                         ]) #row 3
 
@@ -83,13 +102,19 @@ def refresh_cards(ticker):
 ])
 def create_technical_graphs(ticker,startdate, enddate):
         print("create_technical_graphs")
-        ticker = ticker.upper()
-        df_tech = yf.download(ticker,startdate, enddate)
-        print(len(df_tech))
+        print("dates", startdate, enddate)
+        try:
+            ticker = ticker.upper()
+            df_tech = yf.download(ticker,startdate, enddate)
+        except:
+            sleep(3)
+            ticker = ticker.upper()
+            df_tech = yf.download(ticker,startdate, enddate)
+        #print(len(df_tech))
         df_tech.reset_index(inplace=True)
-        print(df_tech)
+        #print(df_tech)
         df_tech = df_indicators_columns(df_tech)
-        print(df_tech)
+        #print(df_tech)
         fig1 = graph_Bollinger(df_tech)
         fig2 = graph_CCI(df_tech)
         fig3 = graph_ADX(df_tech)
@@ -105,13 +130,42 @@ def create_technical_graphs(ticker,startdate, enddate):
         #plotly.offline.plot(fig3, filename='C:/Users/Usuario/Documents/Locus/Finances/dash_stocks/fig3.html')
         return graphs
 
-#@app.callback(
-#    Output('tweets', 'children'),
-#    [Input('interval-component2', 'n_intervals'),
-#     ])
-#def new_tweets(n):
-#        get_options_flow()
-#        return html.P(f"Reloaded Tweets {n}")
+@app.callback(Output('boxes-graph', 'figure'),
+[Input('ticker-input', 'value')
+, Input('date-picker', 'start_date')
+, Input('date-picker', 'end_date')
+, Input('boxes-dropdown', 'value')
+, Input('boxes-period', 'value')
+, Input('boxes-comparison', 'value')
+, Input('boxes-variation', 'value')
+])
+def update_boxes_graph(ticker,startdate, enddate, interval, periods, comparison, variation):
+        sleep(5)
+        print("update_boxes_graph")
+        ticker = ticker.upper()
+        df_boxes = yf.download(ticker, startdate, enddate, interval = interval)
+        df_boxes.reset_index(drop=False, inplace=True)
+        try:
+            df_boxes["mean"] = df_boxes[["High","Low","Close"]].mean(axis = 1)
+            df_boxes["mean_rolling"] = df_boxes["mean"].rolling(periods).mean()
+            df_boxes["mean_rolling"] = df_boxes["mean_rolling"].round(3)
+        except: pass
+
+        try:
+            list_open_var = [np.nan] * variation
+            list_open_var += list(df_boxes["Open"].values)[:-variation]
+
+            df_boxes["open_variation"] = list_open_var
+            df_boxes["var"] = df_boxes["Close"] - df_boxes["open_variation"]
+            df_boxes["var"] = df_boxes["var"] / df_boxes["open_variation"]
+            df_boxes["var"] = df_boxes["var"].round(4)*100
+            df_boxes["var"] = "var: " + df_boxes["var"].apply(lambda x: str(x)[:5]) + "%"
+        except:
+            df_boxes["var"] = "-"
+
+        fig_boxes = boxes_graph(df_boxes, comparison)
+        return fig_boxes
+
 
 @app.callback(
     Output('table-sorting-filtering2', 'data'),
@@ -137,4 +191,4 @@ def update_table2(ticker, n_clicks):
         raise PreventUpdate
 
 if __name__ == '__main__':
-    app.run_server(debug = False)
+    app.run_server(debug = True)

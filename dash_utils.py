@@ -78,10 +78,10 @@ def make_card(alert_message, color, cardbody, style_dict = None):
 def ticker_inputs(inputID, pickerID, MONTH_CUTTOFF):
 
         currentDate = date.today()
-        pastDate = currentDate - dateutil.relativedelta.relativedelta(months=3)
+        pastDate = currentDate - dateutil.relativedelta.relativedelta(months=6)
 
         return html.Div([
-                dcc.Input(id = inputID, type="text", placeholder="MSFT")
+                dcc.Input(id = inputID, type="text", placeholder="Ticker", value="MEL.MC")
              , html.P(" ")
              , dcc.DatePickerRange(
                 id = pickerID,
@@ -111,3 +111,40 @@ def make_item(button, cardbody, i):
             ),
         ]
     )
+
+def boxes_dropdown(id, options, value):
+    dropdown = html.Div(
+                        dcc.Dropdown(id=id,
+                                    options=options,
+                                    value=value,
+                                    placeholder="Select graph timing"),
+                        )
+    return dropdown
+
+def boxes_graph(df_boxes, comparison):
+    fig = go.Figure(data=[go.Candlestick(x=df_boxes["Date"],
+                                        open=df_boxes['Open'], high=df_boxes['High'],
+                                        low=df_boxes['Low'], close=df_boxes['Close'],
+                                        hovertext =df_boxes['var'], name="Period boxes")
+                        ]
+                )
+    try:
+        fig.add_trace(
+                    go.Scatter(x=df_boxes["Date"], y=df_boxes["mean_rolling"], mode='lines', name="Period rolling avg", line=dict(color='green'))
+                    )
+    except: pass
+
+    try:
+        mean_rolling_comparison = list([np.nan]*comparison)
+        print(mean_rolling_comparison)
+        mean_rolling_comparison+=list(df_boxes["mean_rolling"].values)[:-comparison]
+        print(mean_rolling_comparison)
+
+        fig.add_trace(
+                    go.Scatter(x=df_boxes["Date"], y=mean_rolling_comparison, mode='lines', name="Comparison period rolling avg", line=dict(color='red'))
+                    )
+    except: pass
+
+    fig.update_layout(title="Volatility analysis", height=600, hovermode='x unified')
+
+    return fig

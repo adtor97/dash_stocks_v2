@@ -14,13 +14,23 @@ def df_indicators_columns(df):
 
     return df
 
+def df_periodical_columns(df):
+    df["var"] = df[["High","Low","Close"]].std(axis = 1)
+    df["mean"] = df[["High","Low","Close"]].mean(axis = 1)
+    df["mean_rolling"] = df["mean"].rolling(15).mean()
+    df["std_rolling"] = df["mean"].rolling(15).std()
+    df["mean_std_rolling_plus"] = df["mean_rolling"] + df["std_rolling"]
+    df["mean_std_rolling_less"] = df["mean_rolling"] - df["std_rolling"]
+
+    return df
+
 def graph_mean(df):
     if "Date" in list(df.columns):
         date_column = "Date"
     else:
         date_column = "Datetime"
     fig = go.Figure()
-    fig.update_layout(title="Typical daily price", width=600)
+    fig.update_layout(title="Typical daily price", width=600, hovermode='x unified')
 
     fig.add_trace(go.Scatter(x=df[date_column], y=df["mean"], mode='lines', name="price"))
     return fig
@@ -32,7 +42,7 @@ def graph_Bollinger(df):
         date_column = "Datetime"
 
     fig = go.Figure()
-    fig.update_layout(title="Bandas de Bollinger", width=600)
+    fig.update_layout(title="Bandas de Bollinger", width=600, hovermode='x unified')
 
     fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_rolling"], mode='lines', name="15d rolling avg"))
     fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_std_rolling_plus"], mode='lines', name="15d upper band"))
@@ -70,7 +80,7 @@ def graph_CCI(df):
     df = mean_deviation_calculation(df)
     df["CCI"] = (df["mean"] - df["mean_rolling"]) / (0.15 * df["mean_deviation"]) * 10
     fig = go.Figure()
-    fig.update_layout(title="CCI", width=600)
+    fig.update_layout(title="CCI", width=600, hovermode='x unified')
 
     fig.add_trace(go.Scatter(x=df[date_column], y=df["CCI"], mode='lines', name="CCI"))
     return fig
@@ -138,7 +148,7 @@ def graph_ADX(df):
     df["ADX"] = df["ADX"].abs()
 
     fig = go.Figure()
-    fig.update_layout(title="ADX", width=600)
+    fig.update_layout(title="ADX", width=600, hovermode='x unified')
 
     fig.add_trace(go.Scatter(x=df[date_column], y=df["pos_DI"], mode='lines', name="+ DI"))
     fig.add_trace(go.Scatter(x=df[date_column], y=df["neg_DI"], mode='lines', name="- DI"))
