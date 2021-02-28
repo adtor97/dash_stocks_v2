@@ -125,7 +125,8 @@ def boxes_graph(df_boxes, comparison):
     fig = go.Figure(data=[go.Candlestick(x=df_boxes["Date"],
                                         open=df_boxes['Open'], high=df_boxes['High'],
                                         low=df_boxes['Low'], close=df_boxes['Close'],
-                                        hovertext =df_boxes['var'], name="Period boxes")
+                                        hovertext = [f'Var open to close: {x} | Var typical price: {y}' for x,y in list(zip(df_boxes['var_open_close'], df_boxes['var_mean']))],
+                                        name="Period boxes")
                         ]
                 )
     try:

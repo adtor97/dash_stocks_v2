@@ -62,7 +62,7 @@ layout1 = html.Div([
                                     , dcc.Input(id = "boxes-period", type="number", value=10, placeholder="Select # periods", style={"margin-top":"1%", "margin-left":"1%"})
                                     , dbc.Label("Periods comparison rolling avg", style={"margin-top":"2%", "margin-left":"1%"})
                                     , dcc.Input(id = "boxes-comparison", type="number", value=5, placeholder="Select # comparison periods", style={"margin-top":"1%", "margin-left":"1%"})
-                                    , dbc.Label("Periods variation open vs close (var)", style={"margin-top":"2%", "margin-left":"1%"})
+                                    , dbc.Label("Periods variation open vs close (Var)", style={"margin-top":"2%", "margin-left":"1%"})
                                     , dcc.Input(id = "boxes-variation", type="number", value=10, placeholder="Select # variation periods", style={"margin-top":"1%", "margin-left":"1%"})
                                     , dbc.Button("Update volatility analysis", id="boxes-button", color="secondary", style={"margin-top":"8%", "margin-left":"1%"})
                                     ], width=2, align = 'center'
@@ -172,12 +172,25 @@ def update_boxes_graph(n_clicks, ticker, startdate, enddate, interval, periods, 
             list_open_var += list(df_boxes["Open"].values)[:-variation]
 
             df_boxes["open_variation"] = list_open_var
-            df_boxes["var"] = df_boxes["Close"] - df_boxes["open_variation"]
-            df_boxes["var"] = df_boxes["var"] / df_boxes["open_variation"]
-            df_boxes["var"] = df_boxes["var"].round(4)*100
-            df_boxes["var"] = "var: " + df_boxes["var"].apply(lambda x: str(x)[:5]) + "%"
+            df_boxes["var_open_close"] = df_boxes["Close"] - df_boxes["open_variation"]
+            df_boxes["var_open_close"] = df_boxes["var_open_close"] / df_boxes["open_variation"]
+            df_boxes["var_open_close"] = df_boxes["var_open_close"].round(4)*100
+            df_boxes["var_open_close"] = df_boxes["var_open_close"].apply(lambda x: str(x)[:5]) + "%"
         except:
-            df_boxes["var"] = "-"
+            df_boxes["var_open_close"] = "-"
+
+        try:
+            df_boxes["mean"] = df_boxes[["High","Low","Close"]].mean(axis = 1)
+            list_mean_var = [np.nan] * variation
+            list_mean_var += list(df_boxes["mean"].values)[:-variation]
+
+            df_boxes["mean_variation"] = list_mean_var
+            df_boxes["var_mean"] = df_boxes["mean"] - df_boxes["mean_variation"]
+            df_boxes["var_mean"] = df_boxes["var_mean"] / df_boxes["mean_variation"]
+            df_boxes["var_mean"] = df_boxes["var_mean"].round(4)*100
+            df_boxes["var_mean"] = df_boxes["var_mean"].apply(lambda x: str(x)[:5]) + "%"
+        except:
+            df_boxes["var_mean"] = "-"
 
         fig_boxes = boxes_graph(df_boxes, comparison)
         return fig_boxes
