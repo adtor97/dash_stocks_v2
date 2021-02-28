@@ -36,6 +36,8 @@ app.config.suppress_callback_exceptions = True
 
 df_google = pd.DataFrame(data = [], columns = ["google_title", "link"])
 global n_clicks_google
+
+
 n_clicks_google = 0
 boxes_dropdown_options = [{"label":"daily", "value":"1d"},
                         {"label":"weekly", "value":"1wk"},
@@ -49,31 +51,35 @@ layout1 = html.Div([
 
 
                 dbc.Row([dbc.Col(make_card("Enter Ticker", "success", ticker_inputs('ticker-input', 'date-picker', 36)))]) #row 1
-                , dbc.Row([make_card("select ticker", "warning", "select ticker")],id = 'cards', style={"margin-top":"2%"}) #row 2
+                , dbc.Row([make_card("select ticker", "warning", "select ticker")],id = 'cards', style={"margin-top":"2%", "margin-left":"1%"}) #row 2
 
                 , dbc.Row([dbc.Alert("________________________Technical indicators________________________", color="primary")], justify = 'center', style={"margin-top":"2%"})
                 , dbc.Row([make_card("select ticker", "warning", "select ticker for technical graphs")], id='technical_graphs')
 
                 , dbc.Row([
                             dbc.Col([boxes_dropdown(id="boxes-dropdown", options=boxes_dropdown_options, value="1wk")
-                                    , dbc.Label("Periods rolling avg", style={"margin-top":"5%"})
-                                    , dcc.Input(id = "boxes-period", type="number", value=10, placeholder="Select # periods", style={"margin-top":"1%"})
-                                    , dbc.Label("Periods comparison rolling avg", style={"margin-top":"2%"})
-                                    , dcc.Input(id = "boxes-comparison", type="number", value=5, placeholder="Select # comparison periods", style={"margin-top":"1%"})
-                                    , dbc.Label("Periods variation open vs close (var)", style={"margin-top":"2%"})
-                                    , dcc.Input(id = "boxes-variation", type="number", value=10, placeholder="Select # variation periods", style={"margin-top":"1%"})
+                                    , dbc.Label("Periods rolling avg", style={"margin-top":"5%", "margin-left":"1%"})
+                                    , dcc.Input(id = "boxes-period", type="number", value=10, placeholder="Select # periods", style={"margin-top":"1%", "margin-left":"1%"})
+                                    , dbc.Label("Periods comparison rolling avg", style={"margin-top":"2%", "margin-left":"1%"})
+                                    , dcc.Input(id = "boxes-comparison", type="number", value=5, placeholder="Select # comparison periods", style={"margin-top":"1%", "margin-left":"1%"})
+                                    , dbc.Label("Periods variation open vs close (var)", style={"margin-top":"2%", "margin-left":"1%"})
+                                    , dcc.Input(id = "boxes-variation", type="number", value=10, placeholder="Select # variation periods", style={"margin-top":"1%", "margin-left":"1%"})
+                                    , dbc.Button("Update volatility analysis", id="boxes-button", color="secondary", style={"margin-top":"8%", "margin-left":"1%"})
                                     ], width=2, align = 'center'
                                 )
-                            , dbc.Col(dcc.Graph(id="boxes-graph"), width=10)
+                            , dbc.Col(dcc.Graph(id="boxes-graph", figure=go.Figure(layout = {"title": "Volatility analysis"})), width=10)
                             ], justify = 'center')
 
-                , dbc.Row([dbc.Col([make_card("Google News, Forecasts, Analysis", 'primary', [html.P(html.Button('Refresh', id='refresh_google')), make_table('table-sorting-filtering2', df_google, '17px', 10)])])
+                , dbc.Row([dbc.Col([make_card("Google News, Forecasts, Analysis", 'primary', [html.P(dbc.Button('Refresh', color="secondary", id='google-button')), make_table('table-sorting-filtering2', df_google, '17px', 10)])])
                         #,dbc.Col([make_card("Fin table ", "secondary", html.Div(id="fin-table"))])
                         ]) #row 3
 
                     ]) #end div
 
-app.layout= layout1
+def serve_layout():
+    return layout1
+
+app.layout= serve_layout
 
 
 @app.callback(Output('cards', 'children'),
@@ -106,12 +112,14 @@ def create_technical_graphs(ticker,startdate, enddate):
         try:
             ticker = ticker.upper()
             df_tech = yf.download(ticker,startdate, enddate)
+            df_tech.reset_index(inplace=True)
         except:
-            sleep(3)
+            sleep(2)
             ticker = ticker.upper()
             df_tech = yf.download(ticker,startdate, enddate)
+            df_tech.reset_index(inplace=True)
         #print(len(df_tech))
-        df_tech.reset_index(inplace=True)
+
         #print(df_tech)
         df_tech = df_indicators_columns(df_tech)
         #print(df_tech)
@@ -130,24 +138,32 @@ def create_technical_graphs(ticker,startdate, enddate):
         #plotly.offline.plot(fig3, filename='C:/Users/Usuario/Documents/Locus/Finances/dash_stocks/fig3.html')
         return graphs
 
-@app.callback(Output('boxes-graph', 'figure'),
-[Input('ticker-input', 'value')
-, Input('date-picker', 'start_date')
-, Input('date-picker', 'end_date')
-, Input('boxes-dropdown', 'value')
-, Input('boxes-period', 'value')
-, Input('boxes-comparison', 'value')
-, Input('boxes-variation', 'value')
+@app.callback(
+Output('boxes-graph', 'figure'),
+[Input('boxes-button', 'n_clicks')],
+state = [State('ticker-input', 'value')
+, State('date-picker', 'start_date')
+, State('date-picker', 'end_date')
+, State('boxes-dropdown', 'value')
+, State('boxes-period', 'value')
+, State('boxes-comparison', 'value')
+, State('boxes-variation', 'value')
 ])
-def update_boxes_graph(ticker,startdate, enddate, interval, periods, comparison, variation):
-        sleep(5)
+def update_boxes_graph(n_clicks, ticker, startdate, enddate, interval, periods, comparison, variation):
         print("update_boxes_graph")
+        #print(n_clicks)
+        if n_clicks is None:
+            raise PreventUpdate
         ticker = ticker.upper()
         df_boxes = yf.download(ticker, startdate, enddate, interval = interval)
         df_boxes.reset_index(drop=False, inplace=True)
+        df_boxes = df_boxes.dropna(axis=0, how='any')
+        #print(df_boxes.head(), df_boxes.columns, df_boxes.shape)
         try:
             df_boxes["mean"] = df_boxes[["High","Low","Close"]].mean(axis = 1)
+            #print(df_boxes["mean"])
             df_boxes["mean_rolling"] = df_boxes["mean"].rolling(periods).mean()
+            #print(df_boxes["mean_rolling"])
             df_boxes["mean_rolling"] = df_boxes["mean_rolling"].round(3)
         except: pass
 
@@ -169,26 +185,21 @@ def update_boxes_graph(ticker,startdate, enddate, interval, periods, comparison,
 
 @app.callback(
     Output('table-sorting-filtering2', 'data'),
-    [Input('ticker-input', 'value')
-    , Input('refresh_google', 'n_clicks')]
+    [Input('google-button', 'n_clicks')],
+    state = [State('ticker-input', 'value')]
     )
-def update_table2(ticker, n_clicks):
-    global n_clicks_google
-    n_clicks_google = n_clicks_google
-
+def update_table2(n_clicks, ticker):
+    print("update_table2")
+    #print(n_clicks)
     if n_clicks is None:
         raise PreventUpdate
-    elif n_clicks>n_clicks_google:
-        n_clicks_google = n_clicks
-        name = yf.Ticker(ticker)
 
-        name = name.info['longName']
-        print("update_table2")
-        df_google = news_dataframe(name)
-        df_google = df_google.to_dict('records')
-        return df_google
-    else:
-        raise PreventUpdate
+    name = yf.Ticker(ticker)
+    name = name.info['longName']
+    df_google = news_dataframe(name)
+    df_google = df_google.to_dict('records')
+    return df_google
+
 
 if __name__ == '__main__':
     app.run_server(debug = True)

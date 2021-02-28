@@ -136,9 +136,10 @@ def boxes_graph(df_boxes, comparison):
 
     try:
         mean_rolling_comparison = list([np.nan]*comparison)
-        print(mean_rolling_comparison)
+        #print(mean_rolling_comparison)
+        #print(df_boxes["mean_rolling"])
         mean_rolling_comparison+=list(df_boxes["mean_rolling"].values)[:-comparison]
-        print(mean_rolling_comparison)
+        #print(mean_rolling_comparison)
 
         fig.add_trace(
                     go.Scatter(x=df_boxes["Date"], y=mean_rolling_comparison, mode='lines', name="Comparison period rolling avg", line=dict(color='red'))
