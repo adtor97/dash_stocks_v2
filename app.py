@@ -46,21 +46,7 @@ boxes_dropdown_options = [{"label":"daily", "value":"1d"},
 df_boxes = pd.DataFrame(columns = ["Open", "High", "Low", "Close"])
 #df_boxes = yf.download("ADMP", "2020-01-27", "2021-02-27", interval = "1wk")
 
-def boxes_layout():
-    layout = dbc.Row([
-                dbc.Col([boxes_dropdown(id="boxes-dropdown", options=boxes_dropdown_options, value="1wk")
-                        , dbc.Label("Periods rolling avg", style={"margin-top":"5%", "margin-left":"1%"})
-                        , dcc.Input(id = "boxes-period", type="number", value=10, placeholder="Select # periods", style={"margin-top":"1%", "margin-left":"1%"})
-                        , dbc.Label("Periods comparison rolling avg", style={"margin-top":"2%", "margin-left":"1%"})
-                        , dcc.Input(id = "boxes-comparison", type="number", value=5, placeholder="Select # comparison periods", style={"margin-top":"1%", "margin-left":"1%"})
-                        , dbc.Label("Periods variation open vs close (Var)", style={"margin-top":"2%", "margin-left":"1%"})
-                        , dcc.Input(id = "boxes-variation", type="number", value=10, placeholder="Select # variation periods", style={"margin-top":"1%", "margin-left":"1%"})
-                        , dbc.Button("Update volatility analysis", id="boxes-button", color="secondary", style={"margin-top":"8%", "margin-left":"1%"})
-                        ], width=2, align = 'center'
-                    )
-                , dbc.Col(dcc.Graph(id="boxes-graph", figure=go.Figure(layout = {"title": "Volatility analysis"})), width=10)
-                ], justify = 'center')
-    return layout
+
 
 layout1 = html.Div([
         # html.Div(id = 'cards')
@@ -78,12 +64,24 @@ layout1 = html.Div([
                             type="graph",
                             children=dbc.Row([make_card("select ticker", "warning", "select ticker for technical graphs")], id='technical_graphs')
                             )
+                , dbc.Row([
+                            dbc.Col([boxes_dropdown(id="boxes-dropdown", options=boxes_dropdown_options, value="1wk")
+                                    , dbc.Label("Periods rolling avg", style={"margin-top":"5%", "margin-left":"1%"})
+                                    , dcc.Input(id = "boxes-period", type="number", value=10, placeholder="Select # periods", style={"margin-top":"1%", "margin-left":"1%"})
+                                    , dbc.Label("Periods comparison rolling avg", style={"margin-top":"2%", "margin-left":"1%"})
+                                    , dcc.Input(id = "boxes-comparison", type="number", value=5, placeholder="Select # comparison periods", style={"margin-top":"1%", "margin-left":"1%"})
+                                    , dbc.Label("Periods variation open vs close (Var)", style={"margin-top":"2%", "margin-left":"1%"})
+                                    , dcc.Input(id = "boxes-variation", type="number", value=10, placeholder="Select # variation periods", style={"margin-top":"1%", "margin-left":"1%"})
+                                    , dbc.Button("Update volatility analysis", id="boxes-button", color="secondary", style={"margin-top":"8%", "margin-left":"1%"})
+                                    ], width=2, align = 'center'
+                                )
+                        , dbc.Col(
+                                dcc.Loading(
+                                            id="loading-boxes",
+                                            type="graph",
+                                            children=dcc.Graph(id="boxes-graph", figure=go.Figure(layout = {"title": "Volatility analysis"}))), width=10)
 
-                , dcc.Loading(
-                            id="loading-boxes",
-                            type="graph",
-                            children=boxes_layout()
-                            )
+                        ], justify = 'center')
 
                 , dcc.Loading(
                             id="loading-google",
