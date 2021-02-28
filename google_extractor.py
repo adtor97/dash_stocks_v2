@@ -20,7 +20,7 @@ def news_dataframe(company_name, query_list=["Share price forecast","Technical A
     url_title = []
     exception_URLS = ["nasdaq"]
     for i in search(company_name,  tld='com', lang='en', num=1,
-                    start=0, stop=4, pause=1.5, country='USA', extra_params={"tbm":'nws'}):
+                    start=0, stop=4, pause=1, country='USA', extra_params={"tbm":'nws'}):
         print(i)
 
         try:
