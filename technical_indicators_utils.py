@@ -63,27 +63,26 @@ def graph_Bollinger(df):
 
 def mean_deviation_calculation(df):
 
-    for days in ["_15", "_45", "_100"]:
-        mean_deviations = []
-        for index, row in df.iterrows():
-            #print(row["mean_rolling" + days])
-            if str(row["mean_rolling" + days]) == "nan":
-                mean_deviations.append(np.nan)
-            else:
-                mean_rolling = row["mean_rolling" + days]
+    #for days in ["_15", "_45", "_100"]:
+    mean_deviations = []
+    for index, row in df.iterrows():
+        #print(row["mean_rolling" + days])
+        if str(row["mean_rolling_45"]) == "nan":
+            mean_deviations.append(np.nan)
+        else:
+            mean_rolling = row["mean_rolling_45"]
+            df_temp = df.iloc[:index+1]
+            df_temp = df_temp.iloc[-20:]
+            #print(len(df_temp))
 
-                df_temp = df.iloc[:index+1]
-                df_temp = df_temp.iloc[-20:]
-                #print(len(df_temp))
+            df_temp["diff"] = df_temp["mean"] - mean_rolling
+            df_temp["diff"] = df_temp["diff"].abs()
 
-                df_temp["diff" + days] = df_temp["mean"] - mean_rolling
-                df_temp["diff" + days] = df_temp["diff" + days].abs()
-
-                mean_deviation = df_temp["diff" + days].sum() / 20
-                #print(mean_deviation)
-                mean_deviations.append(mean_deviation)
-            #print(mean_deviations)
-        df["mean_deviation" + days] = mean_deviations
+            mean_deviation = df_temp["diff"].sum() / 20
+            #print(mean_deviation)
+            mean_deviations.append(mean_deviation)
+        #print(mean_deviations)
+    df["mean_deviation"] = mean_deviations
     return df
 
 def graph_CCI(df):
@@ -95,9 +94,9 @@ def graph_CCI(df):
     fig = go.Figure()
     fig.update_layout(title="CCI", width=600, hovermode='x unified')
 
-    for days in ["_15", "_45", "_100"]:
-        df["CCI" + days] = (df["mean"] - df["mean_rolling" + days]) / (0.15 * df["mean_deviation" + days]) * 10
-        fig.add_trace(go.Scatter(x=df[date_column], y=df["CCI" + days], mode='lines', name="CCI"+days))
+    #for days in ["_15", "_45", "_100"]:
+    df["CCI"] = (df["mean"] - df["mean_rolling_45"]) / (0.15 * df["mean_deviation"]) * 10
+    fig.add_trace(go.Scatter(x=df[date_column], y=df["CCI"], mode='lines', name="CCI 45"))
     return fig
 
 def pos_DM_calculation(df):
