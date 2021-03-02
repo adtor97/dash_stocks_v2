@@ -59,11 +59,32 @@ layout1 = html.Div([
                             children=dbc.Row([make_card("select ticker", "warning", "select ticker")],id = 'cards', style={"margin-top":"2%", "margin-left":"1%"}))
 
                 , dbc.Row([dbc.Alert("________________________Technical indicators________________________", color="primary")], justify = 'center', style={"margin-top":"2%"})
-                , dcc.Loading(
-                            id="loading-technical_graphs",
-                            type="graph",
-                            children=dbc.Row([make_card("select ticker", "warning", "select ticker for technical graphs")], id='technical_graphs')
-                            )
+                , html.Div(id='tech-df', style={'display': 'none'})
+                , dbc.Row([
+                            dbc.Col([
+                                    dcc.Input(id = "bollinger-days", type="number", value=30, placeholder="Select # days analysis", style={"margin-top":"1%", "margin-left":"1%"})
+                                    , dcc.Loading(
+                                                id="loading-bollinger",
+                                                type="graph",
+                                                children=dcc.Graph(id="bollinger-graph", figure=go.Figure(layout = {"title": "Bollinger bands"})))
+                                    ])
+
+                            , dbc.Col([
+                                    dcc.Input(id = "CCI-days", type="number", value=30, placeholder="Select # days rolling deviation", style={"margin-top":"1%", "margin-left":"1%"})
+                                    , dcc.Loading(
+                                                id="loading-CCI",
+                                                type="graph",
+                                                children=dcc.Graph(id="CCI-graph", figure=go.Figure(layout = {"title": "CCI"})))
+                                    ])
+
+                            , dbc.Col([
+                                    dcc.Loading(
+                                                id="loading-ADX",
+                                                type="graph",
+                                                children=dcc.Graph(id="ADX-graph", figure=go.Figure(layout = {"title": "ADX"})))
+                                    ])
+                            ])
+
                 , dbc.Row([
                             dbc.Col([boxes_dropdown(id="boxes-dropdown", options=boxes_dropdown_options, value="1wk")
                                     , dbc.Label("Periods rolling avg", style={"margin-top":"5%", "margin-left":"1%"})
@@ -114,43 +135,64 @@ def refresh_cards(ticker):
                         , dbc.Col(make_card("Avg 10d Vol", 'secondary', TICKER.info['averageVolume10days']))
                         ] #end cards list
         return cards
-
-@app.callback(Output('technical_graphs', 'children'),
+@app.callback(Output('tech-df', 'children'),
 [Input('ticker-input', 'value')
 , Input('date-picker', 'start_date')
 , Input('date-picker', 'end_date')
 ])
-def create_technical_graphs(ticker,startdate, enddate):
-        print("create_technical_graphs")
-        print("dates", startdate, enddate)
-        try:
-            ticker = ticker.upper()
-            df_tech = yf.download(ticker,startdate, enddate)
-            df_tech.reset_index(inplace=True)
-        except:
-            sleep(2)
-            ticker = ticker.upper()
-            df_tech = yf.download(ticker,startdate, enddate)
-            df_tech.reset_index(inplace=True)
-        #print(len(df_tech))
+def create_technical_df(ticker,startdate, enddate):
+    print("create_technical_df")
+    print("dates", startdate, enddate)
+    try:
+        ticker = ticker.upper()
+        df_tech = yf.download(ticker,startdate, enddate)
+        df_tech.reset_index(inplace=True)
+    except:
+        sleep(2)
+        ticker = ticker.upper()
+        df_tech = yf.download(ticker,startdate, enddate)
+        df_tech.reset_index(inplace=True)
+    #print(len(df_tech))
 
-        #print(df_tech)
-        df_tech = df_indicators_columns(df_tech)
-        #print(df_tech)
-        fig1 = graph_Bollinger(df_tech)
-        fig2 = graph_CCI(df_tech)
-        fig3 = graph_ADX(df_tech)
+    #print(df_tech)
+    df_tech["var"] = df_tech[["High","Low","Close"]].std(axis = 1)
+    df_tech["mean"] = df_tech[["High","Low","Close"]].mean(axis = 1)
 
-        graphs = dbc.Row([
-                            dcc.Graph(figure = fig1)
-                            , dcc.Graph(figure = fig2)
-                            , dcc.Graph(figure = fig3)
-                            ], className="graphs")
 
-        #plotly.offline.plot(fig1, filename='C:/Users/Usuario/Documents/Locus/Finances/dash_stocks/fig1.html')
-        #plotly.offline.plot(fig2, filename='C:/Users/Usuario/Documents/Locus/Finances/dash_stocks/fig2.html')
-        #plotly.offline.plot(fig3, filename='C:/Users/Usuario/Documents/Locus/Finances/dash_stocks/fig3.html')
-        return graphs
+    return df_tech.to_json(date_format='iso', orient='split')
+
+@app.callback(Output('bollinger-graph', 'figure'),
+[Input('tech-df', 'children')
+, Input('bollinger-days', 'value')
+])
+def create_bollinger_graph(df_bollinger, bollinger_days):
+        print("create_bollinger_graph")
+        df_bollinger = pd.read_json(df_bollinger, orient='split')
+        fig_bollinger = graph_Bollinger(df_bollinger, bollinger_days)
+
+        return fig_bollinger
+
+@app.callback(Output('CCI-graph', 'figure'),
+[Input('tech-df', 'children')
+, Input('CCI-days', 'value')
+])
+def create_CCI_graph(df_CCI, CCI_days):
+        print("create_CCI_graph")
+        df_CCI = pd.read_json(df_CCI, orient='split')
+        fig_CCI = graph_CCI(df_CCI, CCI_days)
+
+        return fig_CCI
+
+@app.callback(Output('ADX-graph', 'figure'),
+[Input('tech-df', 'children')
+])
+def create_ADX_graph(df_ADX):
+        print("create_ADX_graph")
+        df_ADX = pd.read_json(df_ADX, orient='split')
+        fig_ADX = graph_ADX(df_ADX)
+
+        return fig_ADX
+
 
 @app.callback(
 Output('boxes-graph', 'figure'),

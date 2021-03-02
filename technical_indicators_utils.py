@@ -36,42 +36,39 @@ def graph_mean(df):
     fig.add_trace(go.Scatter(x=df[date_column], y=df["mean"], mode='lines', name="price"))
     return fig
 
-def graph_Bollinger(df):
-    if "Date" in list(df.columns):
+def graph_Bollinger(df_bollinger, bollinger_days):
+    df_bollinger["mean_rolling"] = df_bollinger["mean"].rolling(bollinger_days).mean()
+    df_bollinger["std_rolling"] = df_bollinger["mean"].rolling(bollinger_days).std()
+    df_bollinger["mean_std_rolling_plus"] = df_bollinger["mean_rolling"] + df_bollinger["std_rolling"]
+    df_bollinger["mean_std_rolling_less"] = df_bollinger["mean_rolling"] - df_bollinger["std_rolling"]
+
+    if "Date" in list(df_bollinger.columns):
         date_column = "Date"
     else:
         date_column = "Datetime"
 
-    fig = go.Figure()
-    fig.update_layout(title="Bandas de Bollinger", width=600, hovermode='x unified')
+    fig_boll = go.Figure()
+    fig_boll.update_layout(title="Bollinger bands", width=600, hovermode='x unified')
 
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_rolling_15"], mode='lines', name="15d rolling avg"))
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_std_rolling_plus_15"], mode='lines', name="15d upper band"))
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_std_rolling_less_15"], mode='lines', name="15d lower band"))
+    fig_boll.add_trace(go.Scatter(x=df_bollinger[date_column], y=df_bollinger["mean_rolling"], mode='lines', name=str(bollinger_days) + " rolling avg"))
+    fig_boll.add_trace(go.Scatter(x=df_bollinger[date_column], y=df_bollinger["mean_std_rolling_plus"], mode='lines', name=str(bollinger_days) + " upper band"))
+    fig_boll.add_trace(go.Scatter(x=df_bollinger[date_column], y=df_bollinger["mean_std_rolling_less"], mode='lines', name=str(bollinger_days) + " lower band"))
 
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_rolling_45"], mode='lines', name="45d rolling avg"))
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_std_rolling_plus_45"], mode='lines', name="45d upper band"))
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_std_rolling_less_45"], mode='lines', name="45d lower band"))
+    fig_boll.add_trace(go.Scatter(x=df_bollinger[date_column], y=df_bollinger["mean"], mode='lines', name=str(bollinger_days) + " Typical Price"))
 
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_rolling_100"], mode='lines', name="100d rolling avg"))
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_std_rolling_plus_100"], mode='lines', name="100d upper band"))
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean_std_rolling_less_100"], mode='lines', name="100d lower band"))
+    return fig_boll
 
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["mean"], mode='lines', name="Typical Price"))
-
-    return fig
-
-def mean_deviation_calculation(df):
-
-    #for days in ["_15", "_45", "_100"]:
+def mean_deviation_calculation(df_CCI, CCI_days):
+    df_CCI["mean_rolling"] = df_CCI["mean"].rolling(CCI_days).mean()
     mean_deviations = []
-    for index, row in df.iterrows():
+
+    for index, row in df_CCI.iterrows():
         #print(row["mean_rolling" + days])
-        if str(row["mean_rolling_45"]) == "nan":
+        if str(row["mean_rolling"]) == "nan":
             mean_deviations.append(np.nan)
         else:
-            mean_rolling = row["mean_rolling_45"]
-            df_temp = df.iloc[:index+1]
+            mean_rolling = row["mean_rolling"]
+            df_temp = df_CCI.iloc[:index+1]
             df_temp = df_temp.iloc[-20:]
             #print(len(df_temp))
 
@@ -82,22 +79,22 @@ def mean_deviation_calculation(df):
             #print(mean_deviation)
             mean_deviations.append(mean_deviation)
         #print(mean_deviations)
-    df["mean_deviation"] = mean_deviations
-    return df
+    df_CCI["mean_deviation"] = mean_deviations
+    return df_CCI
 
-def graph_CCI(df):
-    if "Date" in list(df.columns):
+def graph_CCI(df_CCI, CCI_days):
+    if "Date" in list(df_CCI.columns):
         date_column = "Date"
     else:
         date_column = "Datetime"
-    df = mean_deviation_calculation(df)
-    fig = go.Figure()
-    fig.update_layout(title="CCI", width=600, hovermode='x unified')
+    df_CCI = mean_deviation_calculation(df_CCI, CCI_days)
+    fig_CCI = go.Figure()
+    fig_CCI.update_layout(title="CCI", width=600, hovermode='x unified')
 
     #for days in ["_15", "_45", "_100"]:
-    df["CCI"] = (df["mean"] - df["mean_rolling_45"]) / (0.15 * df["mean_deviation"]) * 10
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["CCI"], mode='lines', name="CCI 45"))
-    return fig
+    df_CCI["CCI"] = (df_CCI["mean"] - df_CCI["mean_rolling"]) / (0.15 * df_CCI["mean_deviation"]) * 10
+    fig_CCI.add_trace(go.Scatter(x=df_CCI[date_column], y=df_CCI["CCI"], mode='lines', name="CCI " + str(CCI_days)))
+    return fig_CCI
 
 def pos_DM_calculation(df):
     pos_DMs = [np.nan]
@@ -141,31 +138,31 @@ def neg_DM_calculation(df):
 
     return df
 
-def graph_ADX(df):
-    if "Date" in list(df.columns):
+def graph_ADX(df_ADX):
+    if "Date" in list(df_ADX.columns):
         date_column = "Date"
     else:
         date_column = "Datetime"
 
-    df = pos_DM_calculation(df)
-    df = TR_calculation(df)
-    df = neg_DM_calculation(df)
-    df["pos_DM_rolling"] = df["pos_DM"].rolling(15).sum()
-    df["neg_DM_rolling"] = df["neg_DM"].rolling(15).sum()
-    df["TR_rolling"] = df["TR"].rolling(15).sum()
+    df_ADX = pos_DM_calculation(df_ADX)
+    df_ADX = TR_calculation(df_ADX)
+    df_ADX = neg_DM_calculation(df_ADX)
+    df_ADX["pos_DM_rolling"] = df_ADX["pos_DM"].rolling(15).sum()
+    df_ADX["neg_DM_rolling"] = df_ADX["neg_DM"].rolling(15).sum()
+    df_ADX["TR_rolling"] = df_ADX["TR"].rolling(15).sum()
 
-    df["pos_DI"] = ((df["pos_DM_rolling"]) - ((df["pos_DM_rolling"]) / 14) + (df["pos_DM"])) / ((df["TR_rolling"]) - ((df["TR_rolling"]) / 14) + (df["TR_rolling"]))
-    df["pos_DI"] = df["pos_DI"]*100
-    df["neg_DI"] = ((df["neg_DM_rolling"]) - ((df["neg_DM_rolling"]) / 14) + (df["neg_DM"])) / ((df["TR_rolling"]) - ((df["TR_rolling"]) / 14) + (df["TR_rolling"]))
-    df["neg_DI"] = df["neg_DI"]*100
-    df["ADX"] = df["pos_DI"] - df["neg_DI"]
-    df["ADX"] = df["ADX"].abs()
+    df_ADX["pos_DI"] = ((df_ADX["pos_DM_rolling"]) - ((df_ADX["pos_DM_rolling"]) / 14) + (df_ADX["pos_DM"])) / ((df_ADX["TR_rolling"]) - ((df_ADX["TR_rolling"]) / 14) + (df_ADX["TR_rolling"]))
+    df_ADX["pos_DI"] = df_ADX["pos_DI"]*100
+    df_ADX["neg_DI"] = ((df_ADX["neg_DM_rolling"]) - ((df_ADX["neg_DM_rolling"]) / 14) + (df_ADX["neg_DM"])) / ((df_ADX["TR_rolling"]) - ((df_ADX["TR_rolling"]) / 14) + (df_ADX["TR_rolling"]))
+    df_ADX["neg_DI"] = df_ADX["neg_DI"]*100
+    df_ADX["ADX"] = df_ADX["pos_DI"] - df_ADX["neg_DI"]
+    df_ADX["ADX"] = df_ADX["ADX"].abs()
 
-    fig = go.Figure()
-    fig.update_layout(title="ADX", width=600, hovermode='x unified')
+    fig_ADX = go.Figure()
+    fig_ADX.update_layout(title="ADX", width=600, hovermode='x unified')
 
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["pos_DI"], mode='lines', name="+ DI"))
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["neg_DI"], mode='lines', name="- DI"))
-    fig.add_trace(go.Scatter(x=df[date_column], y=df["ADX"], mode='lines', name="ADX"))
+    fig_ADX.add_trace(go.Scatter(x=df_ADX[date_column], y=df_ADX["pos_DI"], mode='lines', name="+ DI"))
+    fig_ADX.add_trace(go.Scatter(x=df_ADX[date_column], y=df_ADX["neg_DI"], mode='lines', name="- DI"))
+    fig_ADX.add_trace(go.Scatter(x=df_ADX[date_column], y=df_ADX["ADX"], mode='lines', name="ADX"))
 
-    return fig
+    return fig_ADX
