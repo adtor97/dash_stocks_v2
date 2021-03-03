@@ -86,7 +86,7 @@ def ticker_inputs(inputID, pickerID, MONTH_CUTTOFF):
              , dcc.DatePickerRange(
                 id = pickerID,
                 #min_date_allowed=pastDate,
-                max_date_allowed=currentDate + dateutil.relativedelta.relativedelta(days=1),
+                max_date_allowed=currentDate + dateutil.relativedelta.relativedelta(days=2),
                 initial_visible_month=pastDate,
                 start_date = pastDate,
                 end_date = currentDate
