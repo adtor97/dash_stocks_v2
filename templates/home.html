@@ -4,22 +4,24 @@
 
 
 <body>
+
+<div>
 <div class="container">
   <div class="heading">
-    <h2>Stocklytics</h2>
-    <p>Analyze stocks, deduct insights, buy clever, make money</p>
-    </div>
+    <h1>Stocklytics</h1>
+    <p>· Analyze stocks<br>· Deduct insights<br>· Buy clever<br>· Make money</p>
+  </div>
 
-    <div class="form">
+  <div class="form">
     <form action="/stocks_analysis"  method="GET"  onsubmit="admin_button.disabled = true; return true;">
-      <button type="submit" class="float" name="admin_button">Administrator</button>
+      <button type="submit" class="float" name="admin_button">Admin</button>
     </form>
-    <br>
+
     <form action="/stocks_analysis"  method="GET" onsubmit="coll_button.disabled = true; return true;">
       <button type="submit" class="float" name="coll_button">Investor</button>
     </form>
-    </div>
-    </div>
-
+  </div>
+</div>
+</div>
 
 </body>
