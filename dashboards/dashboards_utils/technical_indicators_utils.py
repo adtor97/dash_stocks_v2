@@ -54,7 +54,7 @@ def graph_Bollinger(df_bollinger, bollinger_days):
     fig_boll.add_trace(go.Scatter(x=df_bollinger[date_column], y=df_bollinger["mean_std_rolling_plus"], mode='lines', name=str(bollinger_days) + " upper band"))
     fig_boll.add_trace(go.Scatter(x=df_bollinger[date_column], y=df_bollinger["mean_std_rolling_less"], mode='lines', name=str(bollinger_days) + " lower band"))
 
-    fig_boll.add_trace(go.Scatter(x=df_bollinger[date_column], y=df_bollinger["mean"], mode='lines', name=str(bollinger_days) + " Typical Price"))
+    fig_boll.add_trace(go.Scatter(x=df_bollinger[date_column], y=df_bollinger["mean"], mode='lines', name="Typical Price"))
 
     return fig_boll
 
