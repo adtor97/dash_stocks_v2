@@ -87,7 +87,7 @@ def ticker_inputs(inputID, pickerID, MONTH_CUTTOFF):
                 id = pickerID,
                 #min_date_allowed=pastDate,
                 max_date_allowed=currentDate + dateutil.relativedelta.relativedelta(days=2),
-                initial_visible_month=pastDate,
+                initial_visible_month=currentDate,
                 start_date = pastDate,
                 end_date = currentDate
                 )])
