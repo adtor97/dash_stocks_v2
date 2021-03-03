@@ -76,14 +76,14 @@ layout1 = html.Div([
                             ])
 
                 , dbc.Row([
-                            dbc.Col([boxes_dropdown(id="boxes-dropdown", options=boxes_dropdown_options, value="1wk")
-                                    , dbc.Label("Periods rolling avg", style={"margin-top":"5%", "margin-left":"1%"})
-                                    , dcc.Input(id = "boxes-period", type="number", value=10, placeholder="Select # periods", style={"margin-top":"1%", "margin-left":"1%"})
-                                    , dbc.Label("Periods comparison rolling avg", style={"margin-top":"2%", "margin-left":"1%"})
-                                    , dcc.Input(id = "boxes-comparison", type="number", value=5, placeholder="Select # comparison periods", style={"margin-top":"1%", "margin-left":"1%"})
-                                    , dbc.Label("Periods variation           ", style={"margin-top":"2%", "margin-left":"1%"})
-                                    , dcc.Input(id = "boxes-variation", type="number", value=10, placeholder="Select # variation periods", style={"margin-top":"1%", "margin-left":"1%"})
-                                    , dbc.Button("Update volatility analysis", id="boxes-button", color="secondary", style={"margin-top":"8%", "margin-left":"1%"})
+                            dbc.Col([dbc.Row(boxes_dropdown(id="boxes-dropdown", options=boxes_dropdown_options, value="1wk"))
+                                    , dbc.Row(dbc.Label("Periods rolling avg", style={"margin-top":"5%", "margin-left":"1%"}))
+                                    , dbc.Row(dcc.Input(id = "boxes-period", type="number", value=10, placeholder="Select # periods", style={"margin-top":"1%", "margin-left":"1%"}))
+                                    , dbc.Row(dbc.Label("Periods comparison rolling avg", style={"margin-top":"2%", "margin-left":"1%"}))
+                                    , dbc.Row(dcc.Input(id = "boxes-comparison", type="number", value=5, placeholder="Select # comparison periods", style={"margin-top":"1%", "margin-left":"1%"}))
+                                    , dbc.Row(dbc.Label("Periods variation", style={"margin-top":"2%", "margin-left":"1%"}))
+                                    , dbc.Row(dcc.Input(id = "boxes-variation", type="number", value=10, placeholder="Select # variation periods", style={"margin-top":"1%", "margin-left":"1%"}))
+                                    , dbc.Row(dbc.Button("Update volatility analysis", id="boxes-button", color="secondary", style={"margin-top":"8%", "margin-left":"1%"}))
                                     ], width=2, align = 'center'
                                 )
                         , dbc.Col(

@@ -8,4 +8,4 @@ Bootstrap(app)
 
 if __name__ == "__main__":
     excel.init_excel(app)
-    app.run(debug=True)
+    app.run(debug=False)
