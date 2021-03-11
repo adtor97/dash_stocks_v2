@@ -48,7 +48,7 @@ layout1 = html.Div([
                 , dcc.Loading(
                             id="loading-cards",
                             type="default",
-                            children=dbc.Row([make_card("select ticker", "warning", "select ticker")],id = 'cards', style={"margin-top":"2%", "margin-left":"1%"}))
+                            children=dbc.Row([make_card("select ticker", "warning", "select ticker")],id = 'cards', align="center", justify="center", style={"margin-top":"2%", "margin-left":"1%"}))
 
                 , dbc.Row([dbc.Alert("________________________Technical indicators________________________", color="primary")], justify = 'center', style={"margin-top":"2%"})
                 , html.Div(id='tech-df', style={'display': 'none'})
@@ -136,19 +136,19 @@ def init_callbacks(dash_app):
                 cols = []
 
                 for i in quote:
-                    col = dbc.Col(make_card(i, "secondary", quote[i]))
+                    col = dbc.Col(make_card(i, "secondary", quote[i]), width=2)
                     cols.append(col)
 
                     if len(cols) == 6:
-                        cards.append(dbc.Row(cols, justify = 'center', style={"margin-top":"2%"}))
+                        cards.append(dbc.Row(cols, align='center', style={"margin-top":"2%", "vertical-align":"middle"}))
                         cols = []
                     elif i==list(quote)[-1]:
                         data = yf.download(tickers=ticker, period='1h', interval='1m')
                         last_price = data.tail(1)["Close"].values[0]
                         print(last_price, round(last_price,3))
-                        col = dbc.Col(make_card("Actual price", "secondary", round(last_price,3)))
+                        col = dbc.Col(make_card("Actual price", "secondary", round(last_price,3)), width=2)
                         cols.append(col)
-                        cards.append(dbc.Row(cols, justify = 'center', style={"margin-top":"2%"}))
+                        cards.append(dbc.Row(cols, align='center', style={"margin-top":"2%", "vertical-align":"middle"}))
 
             return cards
     @dash_app.callback(Output('tech-df', 'children'),
