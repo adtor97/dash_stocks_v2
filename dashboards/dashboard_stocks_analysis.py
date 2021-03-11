@@ -5,7 +5,6 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 import dash_table
 from dash.exceptions import PreventUpdate
-import dash_dangerously_set_inner_html
 
 import flask
 from flask import Flask
@@ -40,7 +39,7 @@ boxes_dropdown_options = [{"label":"minutely", "value":"1m"},
                         {"label":"weekly", "value":"1wk"},
                         {"label":"monthly", "value":"1mo"}
                         ]
-                        
+
 layout1 = html.Div([
         # html.Div(id = 'cards')
 
