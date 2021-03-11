@@ -122,7 +122,9 @@ def boxes_dropdown(id, options, value):
     return dropdown
 
 def boxes_graph(df_boxes, comparison):
-    fig = go.Figure(data=[go.Candlestick(x=df_boxes["Date"],
+    if "Date" in df_boxes.columns: date_column = "Date"
+    else: date_column = "Datetime"
+    fig = go.Figure(data=[go.Candlestick(x=df_boxes[date_column],
                                         open=df_boxes['Open'], high=df_boxes['High'],
                                         low=df_boxes['Low'], close=df_boxes['Close'],
                                         hovertext = [f'Var open to close: {x} | Var typical price: {y}' for x,y in list(zip(df_boxes['var_open_close'], df_boxes['var_mean']))],
@@ -131,7 +133,7 @@ def boxes_graph(df_boxes, comparison):
                 )
     try:
         fig.add_trace(
-                    go.Scatter(x=df_boxes["Date"], y=df_boxes["mean_rolling"], mode='lines', name="Period rolling avg", line=dict(color='green'))
+                    go.Scatter(x=df_boxes[date_column], y=df_boxes["mean_rolling"], mode='lines', name="Period rolling avg", line=dict(color='green'))
                     )
     except: pass
 
@@ -143,7 +145,7 @@ def boxes_graph(df_boxes, comparison):
         #print(mean_rolling_comparison)
 
         fig.add_trace(
-                    go.Scatter(x=df_boxes["Date"], y=mean_rolling_comparison, mode='lines', name="Comparison period rolling avg", line=dict(color='red'))
+                    go.Scatter(x=df_boxes[date_column], y=mean_rolling_comparison, mode='lines', name="Comparison period rolling avg", line=dict(color='red'))
                     )
     except: pass
 

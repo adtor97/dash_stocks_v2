@@ -87,3 +87,4 @@ Werkzeug==1.0.1
 wincertstore==0.2
 wordcloud==1.8.1
 yfinance==0.1.55
+yahoo-fin

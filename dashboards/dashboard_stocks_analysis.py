@@ -5,6 +5,7 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 import dash_table
 from dash.exceptions import PreventUpdate
+import dash_dangerously_set_inner_html
 
 import flask
 from flask import Flask
@@ -16,6 +17,7 @@ import yfinance as yf
 import numpy as np
 import praw
 from time import sleep
+import yahoo_fin.stock_info as si
 
 import plotly
 import plotly.graph_objects as go
@@ -31,11 +33,14 @@ from dashboards.dashboards_utils.technical_indicators_utils import *
 
 df_google = pd.DataFrame(data = [], columns = ["google_title", "link"])
 
-boxes_dropdown_options = [{"label":"daily", "value":"1d"},
+boxes_dropdown_options = [{"label":"minutely", "value":"1m"},
+                        {"label":"minutely (5)", "value":"5m"},
+                        {"label":"hourly", "value":"1h"},
+                        {"label":"daily", "value":"1d"},
                         {"label":"weekly", "value":"1wk"},
                         {"label":"monthly", "value":"1mo"}
                         ]
-
+                        
 layout1 = html.Div([
         # html.Div(id = 'cards')
 
@@ -124,17 +129,28 @@ def init_callbacks(dash_app):
             print("refresh_cards")
             ticker = ticker.upper()
             if ticker is None:
-                    TICKER = 'MSFT'
+                quote = None
             else:
-                    TICKER = yf.Ticker(ticker)
+                quote = si.get_quote_table(ticker)
+                cards = []
+                n_rows = len(quote)//6 + 1
+                cols = []
 
-            cards = [ dbc.Col(make_card("Previous Close ", "secondary", TICKER.info['previousClose']))
-                            , dbc.Col(make_card("Open", "secondary", TICKER.info['open']))
-                            , dbc.Col(make_card("Sector", 'secondary', TICKER.info['sector']))
-                            , dbc.Col(make_card("Beta", 'secondary', TICKER.info['beta']))
-                            , dbc.Col(make_card("50d Avg Price", 'secondary', TICKER.info['fiftyDayAverage']))
-                            , dbc.Col(make_card("Avg 10d Vol", 'secondary', TICKER.info['averageVolume10days']))
-                            ] #end cards list
+                for i in quote:
+                    col = dbc.Col(make_card(i, "secondary", quote[i]))
+                    cols.append(col)
+
+                    if len(cols) == 6:
+                        cards.append(dbc.Row(cols, justify = 'center', style={"margin-top":"2%"}))
+                        cols = []
+                    elif i==list(quote)[-1]:
+                        data = yf.download(tickers=ticker, period='1h', interval='1m')
+                        last_price = data.tail(1)["Close"].values[0]
+                        print(last_price, round(last_price,3))
+                        col = dbc.Col(make_card("Actual price", "secondary", round(last_price,3)))
+                        cols.append(col)
+                        cards.append(dbc.Row(cols, justify = 'center', style={"margin-top":"2%"}))
+
             return cards
     @dash_app.callback(Output('tech-df', 'children'),
     [Input('ticker-input', 'value')
